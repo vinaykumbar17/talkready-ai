@@ -2,6 +2,9 @@ import json
 import os
 import random
 import tempfile
+
+from starlette.concurrency import run_in_threadpool
+
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
@@ -82,17 +85,57 @@ def health_check():
     }
 
 
+
 # --------------------------------------------------
 # SPEECH TRANSCRIPTION
 # --------------------------------------------------
 
 @lru_cache(maxsize=1)
 def get_whisper_model():
+    """Load Whisper once and reuse it across requests."""
     return WhisperModel(
         "base",
         device="cpu",
         compute_type="int8",
+        cpu_threads=1,
+        num_workers=1,
     )
+
+
+def transcribe_file(temp_path: str):
+    """Run Whisper transcription outside FastAPI's event loop."""
+    model = get_whisper_model()
+
+    segments, info = model.transcribe(
+        temp_path,
+        language="en",
+        beam_size=1,
+        best_of=1,
+        vad_filter=False,
+        condition_on_previous_text=False,
+        temperature=0.0,
+        initial_prompt=(
+            "English reading practice. "
+            "Transcribe the speaker's actual words accurately. "
+            "Do not replace words with the reference sentence."
+        ),
+    )
+
+    transcript_parts = []
+
+    for segment in segments:
+        text = segment.text.strip()
+        if text:
+            transcript_parts.append(text)
+
+    transcript = " ".join(transcript_parts).strip()
+
+    return {
+        "transcript": transcript,
+        "language": info.language,
+        "duration_seconds": round(info.duration, 2),
+        "transcript_empty": not bool(transcript),
+    }
 
 
 @app.post("/api/speech/transcribe")
@@ -133,44 +176,23 @@ async def transcribe_audio(
             temp_file.write(audio_bytes)
             temp_path = temp_file.name
 
-        model = get_whisper_model()
-
-        segments, info = model.transcribe(
+        result = await run_in_threadpool(
+            transcribe_file,
             temp_path,
-            language="en",
-            beam_size=5,
-            best_of=5,
-            vad_filter=False,
-            condition_on_previous_text=False,
-            temperature=0.0,
-            initial_prompt=(
-                "English reading practice. "
-                "Transcribe the speaker's actual words accurately. "
-                "Do not replace words with the reference sentence."
-            ),
         )
 
-        transcript_parts = []
+        result["expected_text"] = expected_text.strip()
 
-        for segment in segments:
-            text = segment.text.strip()
-            if text:
-                transcript_parts.append(text)
-
-        transcript = " ".join(transcript_parts).strip()
-
-        return {
-            "transcript": transcript,
-            "expected_text": expected_text.strip(),
-            "language": info.language,
-            "duration_seconds": round(info.duration, 2),
-            "transcript_empty": not bool(transcript),
-        }
+        return result
 
     except HTTPException:
         raise
 
     except Exception as exc:
+        print(
+            f"Transcription failed: {type(exc).__name__}: {exc}"
+        )
+
         raise HTTPException(
             status_code=500,
             detail=f"Transcription failed: {str(exc)}",
