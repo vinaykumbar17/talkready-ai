@@ -1,0 +1,32 @@
+﻿# Secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+secrets/
+*service-account*.json
+*firebase-adminsdk*.json
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+
+# Android generated files
+**/.gradle/
+**/build/
+**/local.properties
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

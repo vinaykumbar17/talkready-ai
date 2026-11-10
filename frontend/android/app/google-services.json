@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "591431734594",
+    "project_id": "talkready-ai",
+    "storage_bucket": "talkready-ai.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:591431734594:android:4e80284057c0994457a4db",
+        "android_client_info": {
+          "package_name": "com.talkreadyai.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "591431734594-irfuouvdak6svhs9ubb1urbduoec1is8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDXGkt5q5YXthUn5wI5LA70bq2bQ5nvUHE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "591431734594-irfuouvdak6svhs9ubb1urbduoec1is8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
