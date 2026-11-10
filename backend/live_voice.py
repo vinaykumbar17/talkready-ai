@@ -360,7 +360,7 @@ async def live_conversation(websocket: WebSocket) -> None:
     except WebSocketDisconnect:
         pass
     except Exception as exc:
-        print(f"Gemini Live voice error: {type(exc).__name__}: {exc}")
+        print(f"Gemini Live voice error: {type(exc).__name__}: {exc}", flush=True)
         try:
             await websocket.send_json({
                 "type": "error",
